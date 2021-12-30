@@ -12,7 +12,7 @@ module.exports = {
     {
       resolve: `gatsby-plugin-google-gtag`,
       options: {
-        trackingId: `G-1TVR3XFPYT`,
+        trackingIds: [`G-1TVR3XFPYT`],
       },
     },
     `gatsby-plugin-image`,

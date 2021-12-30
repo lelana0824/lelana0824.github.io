@@ -4,6 +4,7 @@ import { Link, graphql } from "gatsby"
 import Bio from "../components/bio"
 import Layout from "../components/layout"
 import Seo from "../components/seo"
+import Comment from "./comment"
 
 const BlogPostTemplate = ({ data, location }) => {
   const post = data.markdownRemark
@@ -35,6 +36,7 @@ const BlogPostTemplate = ({ data, location }) => {
         </footer>
       </article>
       <nav className="blog-post-nav">
+        <Comment repo="lelana0824/lelana0824.github.io"/>
         <ul
           style={{
             display: `flex`,

@@ -230,6 +230,7 @@ table thead tr th {
 /* Link */
 
 a {
+  line-break: anywhere;
   color: var(--color-primary);
 }
 

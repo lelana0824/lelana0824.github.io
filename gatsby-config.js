@@ -5,8 +5,8 @@ module.exports = {
       name: `lelana0824`,
       summary: `안녕하세요. 르라나입니다.`,
     },
-    description: `A starter blog demonstrating what Gatsby can do.`,
-    siteUrl: `https://gatsbystarterblogsource.gatsbyjs.io/`,
+    description: `르라나의 개발 블로그입니다.`,
+    siteUrl: `https://lelana0824.github.io/`,
   },
   plugins: [
     {

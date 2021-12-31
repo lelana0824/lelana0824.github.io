@@ -31,12 +31,21 @@ const BlogPostTemplate = ({ data, location }) => {
           itemProp="articleBody"
         />
         <hr />
+        <ul>
+          {post.frontmatter.tags
+            ? post.frontmatter.tags.map(tag => (
+              <li key={tag}>
+                <Link to={`/tags/${tag}`}>{tag}</Link>
+              </li>
+            ))
+            : null}
+        </ul>
         <footer>
           <Bio />
         </footer>
       </article>
       <nav className="blog-post-nav">
-        <Comment repo="lelana0824/lelana0824.github.io"/>
+        <Comment repo="lelana0824/lelana0824.github.io" />
         <ul
           style={{
             display: `flex`,
@@ -87,6 +96,7 @@ export const pageQuery = graphql`
         title
         date(formatString: "MMMM DD, YYYY")
         description
+        tags
       }
     }
     previous: markdownRemark(id: { eq: $previousPostId }) {

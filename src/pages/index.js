@@ -12,7 +12,7 @@ const BlogIndex = ({ data, location }) => {
 
   React.useEffect(() => {
     setRandomUrl(posts[Math.floor(Math.random() * 10) % posts.length].fields.slug)
-  }, [location.path])
+  }, [posts, location.path])
 
   if (posts.length === 0) {
     return (

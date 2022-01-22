@@ -1,4 +1,28 @@
-<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Gatsby Starter Blog RSS Feed]]></title><description><![CDATA[르라나의 개발 블로그입니다.]]></description><link>https://lelana0824.github.io</link><generator>GatsbyJS</generator><lastBuildDate>Sat, 01 Jan 2022 11:44:48 GMT</lastBuildDate><item><title><![CDATA[python pytest fixture (작성중)]]></title><description><![CDATA[작성 계기 이번에 상담자 배정 개발하면서 테스트를 짰다.
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Gatsby Starter Blog RSS Feed]]></title><description><![CDATA[르라나의 개발 블로그입니다.]]></description><link>https://lelana0824.github.io</link><generator>GatsbyJS</generator><lastBuildDate>Sat, 22 Jan 2022 07:37:14 GMT</lastBuildDate><item><title><![CDATA[인텔리제이 명령어 모음 (내 경험 위주)]]></title><description><![CDATA[작성 계기 인텔리제이 월 결제. 좋은 툴을 써보고 싶고, VS Code…]]></description><link>https://lelana0824.github.io/wiki/4/</link><guid isPermaLink="false">https://lelana0824.github.io/wiki/4/</guid><pubDate>Sat, 22 Jan 2022 06:46:03 GMT</pubDate><content:encoded>&lt;h2&gt;작성 계기&lt;/h2&gt;
+&lt;p&gt;인텔리제이 월 결제. 좋은 툴을 써보고 싶고, VS Code와 뭐가 다른지 체험해보고 싶어서 진행했다.
+명령어가 여러가지가 있는 것 같은데, 기본적인 것부터 정리해보려고 한다.&lt;/p&gt;
+&lt;p&gt;맥 기준으로 정리하였다.&lt;/p&gt;
+&lt;h2&gt;명령어 모음&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;현재 폴더에 새 파일 만들기&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ul&gt;
+&lt;li&gt;command + n&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ol start=&quot;2&quot;&gt;
+&lt;li&gt;글씨 크기 변경&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ul&gt;
+&lt;li&gt;setting 들어가서 Editor -&gt; Font에서 변경&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ol start=&quot;3&quot;&gt;
+&lt;li&gt;현재 파일 실행&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ul&gt;
+&lt;li&gt;shift + control + R&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;참고문서&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;https://ndb796.tistory.com/132&quot;&gt;https://ndb796.tistory.com/132&lt;/a&gt;&lt;/p&gt;</content:encoded></item><item><title><![CDATA[python pytest fixture (작성중)]]></title><description><![CDATA[작성 계기 이번에 상담자 배정 개발하면서 테스트를 짰다.
 그 중에 fixture를 알아보려고 한다. Fixture란? pytest-fixture 공식 문서에 fixture…]]></description><link>https://lelana0824.github.io/wiki/3/</link><guid isPermaLink="false">https://lelana0824.github.io/wiki/3/</guid><pubDate>Sat, 01 Jan 2022 11:44:03 GMT</pubDate><content:encoded>&lt;h2&gt;작성 계기&lt;/h2&gt;
 &lt;p&gt;이번에 상담자 배정 개발하면서 테스트를 짰다.
 그 중에 fixture를 알아보려고 한다.&lt;/p&gt;

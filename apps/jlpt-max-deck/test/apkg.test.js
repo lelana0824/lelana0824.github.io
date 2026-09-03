@@ -24,3 +24,15 @@ test('ZIP이 아니면 명확한 오류를 낸다', async () => {
     /APKG|ZIP 색인/,
   );
 });
+
+test('압축하지 않은 MP3 항목도 원본 바이트로 추출한다', async () => {
+  const mp3 = new Uint8Array([0xff, 0xfb, 0x90, 0xc4, 0x00]);
+  const archive = zipSync({
+    media: strToU8('{"0":"word.mp3"}'),
+    0: [mp3, { level: 0 }],
+  });
+  const file = new Blob([archive]);
+  const entries = await parseZipIndex(file);
+  const extracted = await readZipEntry(file, entries.get('0'));
+  assert.deepEqual([...extracted], [...mp3]);
+});

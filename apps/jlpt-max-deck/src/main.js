@@ -8,6 +8,7 @@ import {
   parseZipIndex,
   readZipEntry,
 } from './apkg.js';
+import { LocalAudioPlayer, isMissingObjectError } from './audio-player.js';
 import { cardView } from './card-renderer.js';
 import {
   buildQueue,
@@ -48,6 +49,8 @@ let sessionPosition = 0;
 let activeCard = null;
 let revealed = false;
 let installPrompt = null;
+let audioPlayer = null;
+let deckPersistence = null;
 const objectUrls = new Map();
 
 function escapeHtml(value = '') {
@@ -331,15 +334,43 @@ async function loadDeck(file, { shouldPersist = false } = {}) {
   deckFile = file;
   mediaEntries = media;
   cardIndex = loaded.index;
+  deckPersistence = null;
+  audioPlayer?.dispose();
+  audioPlayer = new LocalAudioPlayer({
+    loadBytes: async (filename) => {
+      const entry = mediaEntries.get(filename);
+      if (!entry) throw new Error('APKG에서 해당 음성을 찾지 못했습니다.');
+      try {
+        return await readZipEntry(deckFile, entry);
+      } catch (error) {
+        if (!isMissingObjectError(error) || !deckPersistence) throw error;
+        try {
+          const stableFile = await deckPersistence;
+          if (!stableFile) throw error;
+          deckFile = stableFile;
+          return await readZipEntry(deckFile, entry);
+        } catch {
+          throw error;
+        }
+      }
+    },
+  });
   renderDashboard();
 
   if (shouldPersist) {
-    persistDeck(file, (ratio) => {
+    deckPersistence = persistDeck(file, (ratio) => {
       const status = document.querySelector('#deck-save-status');
       if (status) status.textContent = `다음에도 바로 열 수 있도록 덱 저장 중 · ${Math.round(ratio * 100)}%`;
-    }).then((saved) => {
+    }).then(async (saved) => {
+      if (!saved) return null;
+      const stableFile = await readPersistedDeck();
+      if (stableFile?.size !== file.size) return null;
+      deckFile = stableFile;
+      return stableFile;
+    });
+    deckPersistence.then((stableFile) => {
       const status = document.querySelector('#deck-save-status');
-      if (status && saved) status.textContent = `${file.name} · 이 기기에 보관됨`;
+      if (status && stableFile) status.textContent = `${file.name} · 이 기기에 보관됨`;
     }).catch((error) => {
       const status = document.querySelector('#deck-save-status');
       if (status) status.textContent = '덱을 영구 보관하지 못했습니다. 다음에 APKG를 다시 선택해 주세요.';
@@ -394,26 +425,17 @@ function rateCard(rating) {
 }
 
 async function playMedia(filename, button) {
-  if (!filename || !deckFile || !mediaEntries) return;
+  if (!filename || !audioPlayer) return;
   button?.classList.add('is-loading');
   try {
-    let url = objectUrls.get(filename);
-    if (!url) {
-      const entry = mediaEntries.get(filename);
-      if (!entry) throw new Error('APKG에서 해당 음성을 찾지 못했습니다.');
-      const bytes = await readZipEntry(deckFile, entry);
-      url = URL.createObjectURL(new Blob([bytes], { type: contentType(filename) }));
-      objectUrls.set(filename, url);
-      if (objectUrls.size > 16) {
-        const oldest = objectUrls.keys().next().value;
-        URL.revokeObjectURL(objectUrls.get(oldest));
-        objectUrls.delete(oldest);
-      }
-    }
-    const audio = new Audio(url);
-    await audio.play();
+    await audioPlayer.play(filename, contentType(filename));
   } catch (error) {
-    toast(error.message || '음성을 재생하지 못했습니다.', 'error');
+    toast(
+      isMissingObjectError(error)
+        ? '음성 파일 연결이 끊겼습니다. 설정에서 APKG를 다시 불러와 주세요.'
+        : error.message || '음성을 재생하지 못했습니다.',
+      'error',
+    );
   } finally {
     button?.classList.remove('is-loading');
   }

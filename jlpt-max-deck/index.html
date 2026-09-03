@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#11231d" />
+    <meta name="description" content="JLPT MAX 공식 덱을 기기에서 직접 불러와 공부하는 모바일 웹앱" />
+    <meta property="og:title" content="JLPT MAX · 모바일 학습" />
+    <meta property="og:description" content="공식 APKG를 업로드 없이 기기에서 열고, 학습 기록은 브라우저에 저장합니다." />
+    <meta property="og:image" content="https://truthyblue.github.io/jlpt-max-deck/assets/social-card.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="JLPT MAX · 모바일 학습" />
+    <meta name="twitter:description" content="공식 APKG를 업로드 없이 기기에서 열고, 학습 기록은 브라우저에 저장합니다." />
+    <meta name="twitter:image" content="https://truthyblue.github.io/jlpt-max-deck/assets/social-card.jpg" />
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <title>JLPT MAX · 모바일 학습</title>
+    <script type="module" crossorigin src="./assets/index-C6fsQIhv.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DgsrDpqg.css">
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <a class="brand" href="../index.html" aria-label="JLPT MAX 홈으로">
+          <span class="brand-mark" aria-hidden="true">学</span>
+          <span><strong>JLPT MAX</strong><small>모바일 학습</small></span>
+        </a>
+        <span class="local-badge"><i aria-hidden="true"></i> 기기 저장</span>
+      </header>
+
+      <main class="shell">
+        <section class="welcome-card" aria-labelledby="welcome-title">
+          <div class="eyebrow">오늘부터 N5</div>
+          <h1 id="welcome-title">덱은 그대로,<br />공부는 브라우저에서.</h1>
+          <p class="welcome-copy">공식 APKG를 이 기기에서 직접 엽니다. 파일과 학습 기록은 외부로 전송되지 않습니다.</p>
+
+          <div class="start-actions">
+            <label class="button button-primary" for="deck-file">다운로드한 APKG 불러오기</label>
+            <input id="deck-file" type="file" accept=".apkg,application/octet-stream" hidden />
+            <a class="button button-secondary" href="https://github.com/truthyblue/jlpt-max-deck/releases/download/v2.1.0/JLPT-MAX-Deck-2.1.0.apkg">공식 덱 받기 <span aria-hidden="true">↗</span></a>
+          </div>
+
+          <div class="trust-row" aria-label="앱 특징">
+            <span>업로드 없음</span>
+            <span>진도 자동 저장</span>
+            <span>홈 화면 설치</span>
+          </div>
+        </section>
+
+        <aside class="preview-card" aria-label="학습 카드 미리보기">
+          <div class="preview-head"><span>N5 · 어휘</span><span>1 / 20</span></div>
+          <div class="preview-word" lang="ja">出す</div>
+          <div class="preview-reading" lang="ja">だす</div>
+          <div class="preview-rule"></div>
+          <div class="preview-meaning">꺼내다 · 제출하다 · 편지를 보내다</div>
+          <div class="preview-example"><span lang="ja">宿題を出す。</span><small>숙제를 제출하다.</small></div>
+          <button class="preview-flip" type="button">카드 뒤집기</button>
+        </aside>
+      </main>
+    </div>
+  </body>
+</html>

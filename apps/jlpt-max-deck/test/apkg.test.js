@@ -1,0 +1,26 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { Blob } from 'node:buffer';
+import { strFromU8, strToU8, zipSync } from 'fflate';
+
+import { parseZipIndex, readZipEntry } from '../src/apkg.js';
+
+test('ZIP 색인을 읽고 압축된 APKG 항목을 부분 추출한다', async () => {
+  const archive = zipSync({
+    'collection.anki21': strToU8('SQLite format 3\0test'),
+    media: strToU8('{"0":"word.mp3"}'),
+    0: strToU8('audio'),
+  });
+  const file = new Blob([archive]);
+  const entries = await parseZipIndex(file);
+  assert.equal(entries.size, 3);
+  const media = await readZipEntry(file, entries.get('media'));
+  assert.equal(strFromU8(media), '{"0":"word.mp3"}');
+});
+
+test('ZIP이 아니면 명확한 오류를 낸다', async () => {
+  await assert.rejects(
+    () => parseZipIndex(new Blob([strToU8('not an apkg')], { type: 'application/octet-stream' })),
+    /APKG|ZIP 색인/,
+  );
+});

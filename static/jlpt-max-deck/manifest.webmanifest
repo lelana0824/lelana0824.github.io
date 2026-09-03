@@ -1,0 +1,15 @@
+{
+  "name": "JLPT MAX 모바일 학습",
+  "short_name": "JLPT MAX",
+  "description": "JLPT MAX 공식 덱을 기기에서 직접 불러와 공부하는 모바일 웹앱",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f1e9",
+  "theme_color": "#11231d",
+  "lang": "ko",
+  "icons": [
+    { "src": "./icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

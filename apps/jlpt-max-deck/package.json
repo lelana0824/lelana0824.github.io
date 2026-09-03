@@ -1,0 +1,25 @@
+{
+  "name": "jlpt-max-webapp",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "dompurify": "3.4.14",
+    "fflate": "0.8.2",
+    "sql.js": "1.13.0"
+  },
+  "devDependencies": {
+    "vite": "7.3.6"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}

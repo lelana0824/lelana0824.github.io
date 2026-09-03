@@ -432,7 +432,7 @@ async function playMedia(filename, button) {
   } catch (error) {
     toast(
       isMissingObjectError(error)
-        ? '음성 파일 연결이 끊겼습니다. 설정에서 APKG를 다시 불러와 주세요.'
+        ? '음성 파일 연결이 끊겼습니다. 설정에서 덱을 제거한 뒤 APKG를 다시 불러와 주세요.'
         : error.message || '음성을 재생하지 못했습니다.',
       'error',
     );

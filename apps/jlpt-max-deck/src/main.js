@@ -39,6 +39,7 @@ const MODE_LABELS = {
 };
 
 const app = document.querySelector('#app');
+const deckInput = document.querySelector('#deck-file');
 let state = loadState();
 let deckFile = null;
 let mediaEntries = null;
@@ -137,7 +138,6 @@ function renderWelcome(error = '') {
         ${error ? `<p class="inline-error" role="alert">${escapeHtml(error)}</p>` : ''}
         <div class="start-actions">
           <label class="button button-primary" for="deck-file">다운로드한 APKG 불러오기</label>
-          <input id="deck-file" type="file" accept=".apkg,application/octet-stream" hidden />
           <a class="button button-secondary" href="${RELEASE_URL}">공식 덱 받기 <span aria-hidden="true">↗</span></a>
         </div>
         <div class="trust-row" aria-label="앱 특징">
@@ -528,8 +528,10 @@ app.addEventListener('click', async (event) => {
     if (window.confirm('이 기기에 보관한 APKG를 제거할까요? 학습 기록은 남아 있습니다.')) {
       await removePersistedDeck();
       worker?.close();
+      audioPlayer?.dispose();
       deckFile = null;
       cardIndex = [];
+      deckInput.value = '';
       renderWelcome();
       toast('기기에 보관한 덱을 제거했습니다. 다시 불러올 수 있습니다.');
     }
@@ -543,7 +545,7 @@ app.addEventListener('click', async (event) => {
   }
 });
 
-app.addEventListener('change', async (event) => {
+document.addEventListener('change', async (event) => {
   if (event.target.id === 'deck-file') {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -553,6 +555,7 @@ app.addEventListener('change', async (event) => {
         toast('공식 v2.1.0과 파일 이름 또는 크기가 다릅니다. 카드 수를 확인해 주세요.');
       }
     } catch (error) {
+      deckInput.value = '';
       renderWelcome(error.message);
     }
   } else if (event.target.id === 'target-level') {

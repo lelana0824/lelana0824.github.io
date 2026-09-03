@@ -11,6 +11,7 @@ import {
 const cards = [
   ['v5', 'n1', 'm1', 0, 'JLPT MAX덱::어휘::N5', 'する', ''],
   ['v4', 'n2', 'm1', 0, 'JLPT MAX덱::어휘::N4', '会議', ''],
+  ['v1', 'n5', 'm1', 0, 'JLPT MAX덱::어휘::N1', '乖離', ''],
   ['audio5', 'n1', 'm1', 2, 'JLPT MAX덱::음성::N5', 'する', ''],
   ['g5', 'n3', 'm2', 0, 'JLPT MAX덱::문법::N5', 'あの', ''],
   ['p3', 'n4', 'm3', 0, 'JLPT MAX덱::종합 실전::어휘::N3::한자 읽기', '済む', ''],
@@ -18,12 +19,12 @@ const cards = [
 
 test('학습 코스는 대상 덱과 카드 유형만 고른다', () => {
   assert.equal(cardMatchesMode(cards[0], 'vocabulary', 'N3'), true);
-  assert.equal(cardMatchesMode(cards[2], 'vocabulary', 'N3'), false);
-  assert.equal(cardMatchesMode(cards[3], 'grammar', 'N3'), true);
-  assert.equal(cardMatchesMode(cards[4], 'practice', 'N3'), true);
+  assert.equal(cardMatchesMode(cards[3], 'vocabulary', 'N3'), false);
+  assert.equal(cardMatchesMode(cards[4], 'grammar', 'N3'), true);
+  assert.equal(cardMatchesMode(cards[5], 'practice', 'N3'), true);
 });
 
-test('새 어휘는 N5부터 선택한 하루 분량만 만든다', () => {
+test('선택한 급수의 새 어휘만 하루 분량으로 만든다', () => {
   const queue = buildQueue(cards, {
     target: 'N4',
     dailyGoal: 20,
@@ -31,8 +32,21 @@ test('새 어휘는 N5부터 선택한 하루 분량만 만든다', () => {
     progress: {},
     newHistory: {},
   }, Date.UTC(2026, 8, 3));
-  assert.deepEqual(queue.cards.map((card) => card[0]), ['v5']);
-  assert.equal(queue.activeLevel, 'N5');
+  assert.deepEqual(queue.cards.map((card) => card[0]), ['v4']);
+  assert.equal(queue.activeLevel, 'N4');
+});
+
+test('N1을 선택하면 N5 카드가 학습 목록에 섞이지 않는다', () => {
+  const queue = buildQueue(cards, {
+    target: 'N1',
+    dailyGoal: 20,
+    mode: 'vocabulary',
+    progress: { v5: [0, 1, 250, 1, 0] },
+    newHistory: {},
+  }, Date.UTC(2026, 8, 3));
+  assert.deepEqual(queue.cards.map((card) => card[0]), ['v1']);
+  assert.deepEqual(queue.due, []);
+  assert.equal(queue.activeLevel, 'N1');
 });
 
 test('이미 공부한 새 카드를 하루 목표에서 차감한다', () => {

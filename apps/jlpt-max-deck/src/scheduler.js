@@ -28,14 +28,13 @@ export function cardMatchesMode(card, mode, target) {
   return deck.includes(`::종합 실전::`) && deck.includes(`::${target}`);
 }
 
-export function allowedLevels(target, mode) {
-  if (mode === 'practice') return [target];
-  return LEVELS.slice(0, LEVELS.indexOf(target) + 1);
+export function allowedLevels(target) {
+  return LEVELS.includes(target) ? [target] : [];
 }
 
 export function buildQueue(index, state, now = Date.now()) {
   const nowSeconds = Math.floor(now / 1000);
-  const levels = allowedLevels(state.target, state.mode);
+  const levels = allowedLevels(state.target);
   const eligible = index.filter((card) => (
     levels.includes(levelFromDeck(card[4])) &&
     cardMatchesMode(card, state.mode, state.target)

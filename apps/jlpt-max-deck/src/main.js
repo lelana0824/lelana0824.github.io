@@ -128,7 +128,7 @@ function renderWelcome(error = '') {
     ${topbar()}
     <main class="shell welcome-shell">
       <section class="welcome-card" aria-labelledby="welcome-title">
-        <div class="eyebrow">오늘부터 N5</div>
+        <div class="eyebrow">선택한 급수 집중 학습</div>
         <h1 id="welcome-title">덱은 그대로,<br />공부는 브라우저에서.</h1>
         <p class="welcome-copy">공식 APKG를 이 기기에서 직접 엽니다. 파일과 학습 기록은 외부로 전송되지 않습니다.</p>
         ${error ? `<p class="inline-error" role="alert">${escapeHtml(error)}</p>` : ''}
@@ -142,11 +142,11 @@ function renderWelcome(error = '') {
         </div>
         <details class="how-it-works">
           <summary>처음 사용하는 순서</summary>
-          <ol><li>공식 덱을 기기에 받습니다.</li><li>위의 APKG 불러오기를 누릅니다.</li><li>처리가 끝나면 N5부터 공부합니다.</li></ol>
+          <ol><li>공식 덱을 기기에 받습니다.</li><li>위의 APKG 불러오기를 누릅니다.</li><li>설정에서 공부할 급수를 선택합니다.</li></ol>
         </details>
       </section>
       <aside class="preview-card is-active" aria-label="학습 카드 미리보기">
-        <div class="preview-head"><span>N5 · 어휘</span><span>미리보기</span></div>
+        <div class="preview-head"><span>JLPT · 어휘</span><span>미리보기</span></div>
         <div class="preview-word" lang="ja">出す</div>
         <div class="preview-reading" lang="ja">だす</div>
         <div class="preview-rule"></div>
@@ -190,7 +190,7 @@ function renderDashboard() {
     ${topbar()}
     <main class="dashboard">
       <section class="dashboard-hero">
-        <div><p class="date-label">${formatDate()}</p><h1>오늘도, 한 장씩.</h1><p><strong>${state.target}</strong>까지 N5부터 차례로 이어갑니다.</p></div>
+        <div><p class="date-label">${formatDate()}</p><h1>오늘도, 한 장씩.</h1><p><strong>${state.target}</strong> 콘텐츠만 집중해서 공부합니다.</p></div>
         <div class="streak-badge"><span>${streak || '–'}</span><small>연속 학습일</small></div>
       </section>
 
@@ -290,7 +290,7 @@ function renderSettings() {
       <section class="settings-hero"><span class="section-kicker">PREFERENCES</span><h1>내 학습 설정</h1><p>이 브라우저에만 저장되며 다른 기기와 자동 동기화되지 않습니다.</p></section>
 
       <section class="settings-card">
-        <div class="setting-row"><label for="target-level"><strong>목표 급수</strong><small>N5부터 선택한 급수까지 공부합니다.</small></label><select id="target-level">${['N5','N4','N3','N2','N1'].map((level) => `<option ${state.target === level ? 'selected' : ''}>${level}</option>`).join('')}</select></div>
+        <div class="setting-row"><label for="target-level"><strong>목표 급수</strong><small>선택한 급수의 카드만 공부합니다.</small></label><select id="target-level">${['N5','N4','N3','N2','N1'].map((level) => `<option ${state.target === level ? 'selected' : ''}>${level}</option>`).join('')}</select></div>
         <div class="setting-row"><label for="daily-goal"><strong>하루 새 카드</strong><small>복습이 밀리면 먼저 복습을 끝내세요.</small></label><select id="daily-goal">${[10,20,30,50].map((count) => `<option value="${count}" ${state.dailyGoal === count ? 'selected' : ''}>${count}장</option>`).join('')}</select></div>
       </section>
 

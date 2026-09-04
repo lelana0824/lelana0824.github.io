@@ -15,6 +15,7 @@ import {
   dayKey,
   reviewLabel,
   scheduleReview,
+  shuffleCards,
   streakFromHistory,
 } from './scheduler.js';
 import {
@@ -340,7 +341,7 @@ async function loadDeck(file) {
 
 async function startStudy() {
   const queue = currentQueue();
-  sessionCards = queue.cards;
+  sessionCards = shuffleCards(queue.cards);
   sessionPosition = 0;
   if (!sessionCards.length) {
     renderSessionComplete();

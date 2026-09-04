@@ -60,6 +60,15 @@ export function buildQueue(index, state, now = Date.now()) {
   };
 }
 
+export function shuffleCards(cards, random = Math.random) {
+  const shuffled = [...cards];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
 export function scheduleReview(previous, rating, now = Date.now()) {
   if (!RATINGS.includes(rating)) throw new Error('알 수 없는 채점입니다.');
   const nowSeconds = Math.floor(now / 1000);

@@ -5,6 +5,7 @@ import {
   buildQueue,
   cardMatchesMode,
   scheduleReview,
+  shuffleCards,
   streakFromHistory,
 } from '../src/scheduler.js';
 
@@ -58,6 +59,15 @@ test('이미 공부한 새 카드를 하루 목표에서 차감한다', () => {
     newHistory: { '2026-09-03': 1 },
   }, new Date(2026, 8, 3, 12).getTime());
   assert.equal(queue.fresh.length, 0);
+});
+
+test('학습을 시작할 때마다 카드 순서를 새로 섞고 원본은 유지한다', () => {
+  const source = cards.slice(0, 4);
+  const first = shuffleCards(source, () => 0);
+  const second = shuffleCards(source, () => 0.999);
+
+  assert.notDeepEqual(first.map((card) => card[0]), second.map((card) => card[0]));
+  assert.deepEqual(source.map((card) => card[0]), ['v5', 'v4', 'v1', 'audio5']);
 });
 
 test('Again은 10분, Good은 이틀 뒤 복습으로 잡는다', () => {

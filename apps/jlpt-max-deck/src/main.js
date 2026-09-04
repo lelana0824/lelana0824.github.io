@@ -389,23 +389,16 @@ async function loadDeck(file, { shouldPersist = false } = {}) {
       return readZipEntry(deckFile, entry);
     },
   });
-  let saveError = null;
   let savedNow = false;
   if (shouldPersist) {
     renderLoading('APKG를 이 기기에 한 번 저장하고 있습니다.', 0);
-    try {
-      await saveDeckOnDevice(file);
-      savedNow = true;
-    } catch (error) {
-      if (error?.name === 'AbortError') throw error;
-      saveError = error;
-    }
+    await saveDeckOnDevice(file);
+    savedNow = true;
   } else {
     deckSaveState = loadDeckMeta() ? 'saved' : 'idle';
   }
   renderDashboard();
   if (savedNow) toast('APKG를 기기에 저장했습니다. 다음부터 자동으로 열립니다.');
-  if (saveError) toast(`APKG 기기 저장 실패: ${saveError.message}`, 'error');
 }
 
 async function startStudy() {

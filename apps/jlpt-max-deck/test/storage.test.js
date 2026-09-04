@@ -76,7 +76,11 @@ test('APKG는 저장 완료 후에만 다음 탭에서 복원된다', async () =
   assert.equal(progress.at(-1), 1);
 
   storage.setItem(DECK_META_KEY, JSON.stringify({ ...meta, size: file.size + 1 }));
-  assert.equal(await readPersistedDeck({ navigatorObject, storage }), null);
+  await assert.rejects(
+    () => readPersistedDeck({ navigatorObject, storage }),
+    /크기가 저장 완료 정보와 다릅니다/,
+  );
+  assert.notEqual(storage.getItem(DECK_META_KEY), null);
   storage.setItem(DECK_META_KEY, JSON.stringify(meta));
 
   await removePersistedDeck({ navigatorObject, storage });

@@ -6,18 +6,10 @@ let database;
 let fieldsByModel = new Map();
 let modelNames = new Map();
 
-async function readZipEntry(file, entry) {
-  const header = new DataView(await file.slice(entry.localOffset, entry.localOffset + 30).arrayBuffer());
-  if (header.byteLength !== 30 || header.getUint32(0, true) !== 0x04034b50) {
-    throw new Error('APKG 컬렉션 헤더가 손상되었습니다.');
-  }
-  const start = entry.localOffset + 30 + header.getUint16(26, true) + header.getUint16(28, true);
-  const compressed = new Uint8Array(
-    await file.slice(start, start + entry.compressedSize).arrayBuffer(),
-  );
-  if (entry.method === 0) return compressed;
-  if (entry.method === 8) return inflateSync(compressed);
-  throw new Error(`지원하지 않는 컬렉션 압축 방식입니다: ${entry.method}`);
+function decodeCollection(bytes, method) {
+  if (method === 0) return bytes;
+  if (method === 8) return inflateSync(bytes);
+  throw new Error(`지원하지 않는 컬렉션 압축 방식입니다: ${method}`);
 }
 
 function patchUnicase(bytes) {
@@ -75,8 +67,8 @@ function loadIndex() {
   `);
 }
 
-async function loadDeck(file, entry) {
-  const collection = patchUnicase(await readZipEntry(file, entry));
+async function loadDeck(bytes, method) {
+  const collection = patchUnicase(decodeCollection(bytes, method));
   const SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
   database?.close();
   database = new SQL.Database(collection);
@@ -132,7 +124,7 @@ function getCard(cardId) {
 self.addEventListener('message', async ({ data }) => {
   try {
     let result;
-    if (data.type === 'load') result = await loadDeck(data.file, data.entry);
+    if (data.type === 'load-collection') result = await loadDeck(data.bytes, data.method);
     else if (data.type === 'get-card') result = getCard(data.cardId);
     else throw new Error('알 수 없는 덱 작업입니다.');
     self.postMessage({ id: data.id, result });

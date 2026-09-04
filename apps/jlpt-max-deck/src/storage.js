@@ -64,14 +64,13 @@ export async function readPersistedDeck({
 } = {}) {
   const meta = loadDeckMeta(storage);
   if (!meta || !navigatorObject?.storage?.getDirectory) return null;
-  try {
-    const root = await navigatorObject.storage.getDirectory();
-    const handle = await root.getFileHandle(OPFS_FILENAME);
-    const file = await handle.getFile();
-    return file.size === meta.size ? file : null;
-  } catch {
-    return null;
+  const root = await navigatorObject.storage.getDirectory();
+  const handle = await root.getFileHandle(OPFS_FILENAME);
+  const file = await handle.getFile();
+  if (file.size !== meta.size) {
+    throw new Error('기기에 저장된 APKG의 크기가 저장 완료 정보와 다릅니다.');
   }
+  return file;
 }
 
 function aborted() {

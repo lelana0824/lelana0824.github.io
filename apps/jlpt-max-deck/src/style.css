@@ -165,6 +165,29 @@ h1 {
 
 .trust-row span::before { content: "✓"; margin-right: 6px; color: #5f970d; }
 
+.stored-deck-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.stored-deck-tools button,
+.stored-deck-tools a {
+  border: 0;
+  padding: 0;
+  color: var(--forest);
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .preview-card {
   position: relative;
   overflow: hidden;

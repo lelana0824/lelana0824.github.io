@@ -17,4 +17,8 @@ test('APKG 파일 입력은 화면 교체 대상 밖에서 계속 유지된다',
   assert.equal(main.includes('persistDeck'), true);
   assert.match(main, /function boot\(\) \{\s+renderWelcome\(\);/);
   assert.match(main, /loadDeck\(file, \{ shouldPersist: true \}\)/);
+  assert.match(main, /await saveDeckOnDevice\(file\)/);
+  assert.equal(main.includes('worker.load(file'), false);
+  const restore = main.slice(main.indexOf('async function restoreSavedDeck'), main.indexOf('function boot'));
+  assert.equal(restore.includes('removePersistedDeck'), false);
 });

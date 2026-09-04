@@ -77,7 +77,7 @@ export async function parseZipIndex(file) {
   return entries;
 }
 
-export async function readZipEntry(file, entry) {
+export async function readZipEntryPayload(file, entry) {
   if (!entry) throw new Error('APKG에서 필요한 파일을 찾지 못했습니다.');
   const header = new Uint8Array(
     await file.slice(entry.localOffset, entry.localOffset + 30).arrayBuffer(),
@@ -89,9 +89,13 @@ export async function readZipEntry(file, entry) {
   const nameLength = view.getUint16(26, true);
   const extraLength = view.getUint16(28, true);
   const start = entry.localOffset + 30 + nameLength + extraLength;
-  const compressed = new Uint8Array(
+  return new Uint8Array(
     await file.slice(start, start + entry.compressedSize).arrayBuffer(),
   );
+}
+
+export async function readZipEntry(file, entry) {
+  const compressed = await readZipEntryPayload(file, entry);
 
   if (entry.method === 0) return compressed;
   if (entry.method === 8) return inflateSync(compressed);
@@ -155,16 +159,24 @@ export class DeckWorkerClient {
     });
   }
 
-  request(type, payload = {}) {
+  request(type, payload = {}, transfer = []) {
     const id = this.nextId++;
     return new Promise((resolve, reject) => {
       this.pending.set(id, { resolve, reject });
-      this.worker.postMessage({ id, type, ...payload });
+      try {
+        this.worker.postMessage({ id, type, ...payload }, transfer);
+      } catch (error) {
+        this.pending.delete(id);
+        reject(error);
+      }
     });
   }
 
-  load(file, entry) {
-    return this.request('load', { file, entry });
+  loadCollection(bytes, method) {
+    const payload = bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength
+      ? bytes
+      : bytes.slice();
+    return this.request('load-collection', { bytes: payload, method }, [payload.buffer]);
   }
 
   getCard(cardId) {

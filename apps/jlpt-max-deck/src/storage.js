@@ -1,5 +1,5 @@
 export const STATE_KEY = 'jlpt-max-webapp:state:v1';
-const LEGACY_DECK_META_KEY = 'jlpt-max-webapp:deck:v1';
+export const DECK_META_KEY = 'jlpt-max-webapp:deck:v1';
 const OPFS_FILENAME = 'jlpt-max-deck.apkg';
 
 export const DEFAULT_STATE = Object.freeze({
@@ -45,14 +45,125 @@ export function saveState(state) {
   localStorage.setItem(STATE_KEY, JSON.stringify(cleanState(state)));
 }
 
-export async function clearLegacyPersistedDeck() {
-  localStorage.removeItem(LEGACY_DECK_META_KEY);
-  if (!navigator.storage?.getDirectory) return;
+export function loadDeckMeta(storage = globalThis.localStorage) {
   try {
-    const root = await navigator.storage.getDirectory();
+    const value = JSON.parse(storage?.getItem(DECK_META_KEY));
+    return typeof value?.name === 'string' && Number(value?.size) > 0 ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveDeckMeta(meta, storage = globalThis.localStorage) {
+  storage?.setItem(DECK_META_KEY, JSON.stringify(meta));
+}
+
+export async function readPersistedDeck({
+  navigatorObject = globalThis.navigator,
+  storage = globalThis.localStorage,
+} = {}) {
+  const meta = loadDeckMeta(storage);
+  if (!meta || !navigatorObject?.storage?.getDirectory) return null;
+  try {
+    const root = await navigatorObject.storage.getDirectory();
+    const handle = await root.getFileHandle(OPFS_FILENAME);
+    const file = await handle.getFile();
+    return file.size === meta.size ? file : null;
+  } catch {
+    return null;
+  }
+}
+
+function aborted() {
+  const error = new Error('덱 저장을 취소했습니다.');
+  error.name = 'AbortError';
+  return error;
+}
+
+export async function persistDeck(file, onProgress = () => {}, {
+  navigatorObject = globalThis.navigator,
+  storage = globalThis.localStorage,
+  signal,
+} = {}) {
+  if (!navigatorObject?.storage?.getDirectory || !file?.stream) {
+    throw new Error('이 브라우저에서는 APKG 자동 저장을 지원하지 않습니다.');
+  }
+  const estimate = await navigatorObject.storage.estimate?.();
+  const available = estimate?.quota && estimate?.usage != null
+    ? estimate.quota - estimate.usage
+    : Infinity;
+  if (available < file.size * 1.05) {
+    throw new Error('기기 저장 공간이 부족해 APKG를 보관하지 못했습니다.');
+  }
+
+  let persistent = false;
+  try {
+    persistent = Boolean(await navigatorObject.storage.persist?.());
+  } catch {
+    // 영구 저장 요청이 거절되거나 실패해도 일반 기기 저장은 계속합니다.
+  }
+
+  storage?.removeItem(DECK_META_KEY);
+  let root = null;
+  let writable = null;
+  let reader = null;
+  let written = 0;
+
+  try {
+    root = await navigatorObject.storage.getDirectory();
+    const handle = await root.getFileHandle(OPFS_FILENAME, { create: true });
+    writable = await handle.createWritable();
+    reader = file.stream().getReader();
+    while (true) {
+      if (signal?.aborted) throw aborted();
+      const { done, value } = await reader.read();
+      if (done) break;
+      await writable.write(value);
+      written += value.byteLength;
+      onProgress(Math.min(1, written / file.size));
+    }
+    if (signal?.aborted) throw aborted();
+    await writable.close();
+    const savedFile = await handle.getFile();
+    if (savedFile.size !== file.size) throw new Error('저장된 APKG의 크기가 원본과 다릅니다.');
+    const meta = {
+      name: file.name,
+      size: file.size,
+      savedAt: Date.now(),
+      persistent,
+    };
+    saveDeckMeta(meta, storage);
+    onProgress(1);
+    return meta;
+  } catch (error) {
+    storage?.removeItem(DECK_META_KEY);
+    try {
+      await writable?.abort?.(error);
+    } catch {
+      // 중단 처리 자체가 실패해도 원래 저장 오류를 유지합니다.
+    }
+    try {
+      await root?.removeEntry(OPFS_FILENAME);
+    } catch {
+      // 불완전 파일이 없으면 정리할 항목도 없습니다.
+    }
+    throw error;
+  } finally {
+    reader?.releaseLock?.();
+  }
+}
+
+export async function removePersistedDeck({
+  navigatorObject = globalThis.navigator,
+  storage = globalThis.localStorage,
+} = {}) {
+  storage?.removeItem(DECK_META_KEY);
+  if (!navigatorObject?.storage?.getDirectory) return;
+  try {
+    const root = await navigatorObject.storage.getDirectory();
     await root.removeEntry(OPFS_FILENAME);
   } catch {
-    // 이전 버전에서 저장한 파일이 없으면 정리할 항목도 없습니다.
+    // 저장된 파일이 없으면 이미 제거된 상태입니다.
   }
 }
 

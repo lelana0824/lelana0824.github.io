@@ -13,7 +13,8 @@ test('APKG 파일 입력은 화면 교체 대상 밖에서 계속 유지된다',
   assert.equal((html.match(/id="deck-file"/g) || []).length, 1);
   assert.equal(main.includes('<input id="deck-file"'), false);
   assert.equal(main.includes("document.addEventListener('change'"), true);
-  assert.equal(main.includes('readPersistedDeck'), false);
-  assert.equal(main.includes('persistDeck'), false);
+  assert.equal(main.includes('readPersistedDeck'), true);
+  assert.equal(main.includes('persistDeck'), true);
   assert.match(main, /function boot\(\) \{\s+renderWelcome\(\);/);
+  assert.match(main, /loadDeck\(file, \{ shouldPersist: true \}\)/);
 });

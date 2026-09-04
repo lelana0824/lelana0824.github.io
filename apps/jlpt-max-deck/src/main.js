@@ -21,10 +21,13 @@ import {
 } from './scheduler.js';
 import {
   DEFAULT_STATE,
-  clearLegacyPersistedDeck,
   exportProgress,
   importProgress,
+  loadDeckMeta,
   loadState,
+  persistDeck,
+  readPersistedDeck,
+  removePersistedDeck,
   saveState,
 } from './storage.js';
 
@@ -50,6 +53,9 @@ let activeCard = null;
 let revealed = false;
 let installPrompt = null;
 let audioPlayer = null;
+let deckSaveController = null;
+let deckSaveTask = null;
+let deckSaveState = 'idle';
 const objectUrls = new Map();
 
 function escapeHtml(value = '') {
@@ -185,6 +191,12 @@ function renderDashboard() {
     ? Math.round((queue.learnedCount / queue.eligibleCount) * 100)
     : 0;
   const modeLabel = MODE_LABELS[state.mode];
+  const deckMeta = loadDeckMeta();
+  const deckStatus = deckSaveState === 'saving'
+    ? 'APKG를 이 기기에 저장하는 중입니다. 완료될 때까지 이 탭을 닫지 마세요.'
+    : deckMeta
+      ? `${escapeHtml(deckMeta.name)} · 이 기기에 저장됨 · 다음 탭부터 자동으로 열립니다.`
+      : 'APKG 자동 저장을 준비하고 있습니다.';
   app.innerHTML = `
     ${topbar()}
     <main class="dashboard">
@@ -225,7 +237,7 @@ function renderDashboard() {
         <p>${queue.learnedCount.toLocaleString()} / ${queue.eligibleCount.toLocaleString()}장 학습</p>
       </section>
 
-      <p id="deck-save-status" class="deck-save-status">학습 기록은 자동 저장됩니다. 앱을 다시 열면 APKG만 다시 선택해 주세요.</p>
+      <p id="deck-save-status" class="deck-save-status">${deckStatus}</p>
     </main>
     ${bottomNav('home')}
   `;
@@ -282,6 +294,7 @@ function renderSessionComplete() {
 }
 
 function renderSettings() {
+  const deckMeta = loadDeckMeta();
   app.innerHTML = `
     ${topbar({ back: true, title: '설정' })}
     <main class="settings-view">
@@ -302,8 +315,8 @@ function renderSettings() {
       </section>
 
       <section class="settings-group"><h2>공식 덱</h2>
-        <div class="deck-info-card"><div>${icon('lock')}<span><strong>${escapeHtml(deckFile?.name || EXPECTED_FILENAME)}</strong><small>${formatBytes(deckFile?.size || EXPECTED_SIZE)} · 업로드 없음</small></span></div><span>현재 세션</span></div>
-        <div class="danger-actions"><button type="button" data-action="remove-deck">현재 덱 닫기</button><button type="button" data-action="reset-progress">학습 기록 초기화</button></div>
+        <div class="deck-info-card"><div>${icon('lock')}<span><strong>${escapeHtml(deckMeta?.name || deckFile?.name || EXPECTED_FILENAME)}</strong><small>${formatBytes(deckMeta?.size || deckFile?.size || EXPECTED_SIZE)} · 업로드 없음</small></span></div><span>${deckSaveState === 'saving' ? '저장 중' : deckMeta ? '기기 저장됨' : '현재 세션'}</span></div>
+        <div class="danger-actions"><button type="button" data-action="remove-deck">기기에서 덱 제거</button><button type="button" data-action="reset-progress">학습 기록 초기화</button></div>
       </section>
       <p class="license-note">카드 내용과 음성은 JLPT MAX 공식 APKG에서 기기 내에서만 읽습니다. 앱은 Anki·JLPT 시험 운영기관의 공식 제품이 아닙니다.</p>
     </main>
@@ -311,7 +324,43 @@ function renderSettings() {
   `;
 }
 
-async function loadDeck(file) {
+function updateDeckSaveStatus(message) {
+  const status = document.querySelector('#deck-save-status');
+  if (status) status.textContent = message;
+}
+
+function saveDeckOnDevice(file) {
+  deckSaveController?.abort();
+  const controller = new AbortController();
+  let lastPercent = -1;
+  deckSaveController = controller;
+  deckSaveState = 'saving';
+  const task = persistDeck(file, (ratio) => {
+    const percent = Math.round(ratio * 100);
+    if (percent === lastPercent) return;
+    lastPercent = percent;
+    updateDeckSaveStatus(`APKG를 이 기기에 저장하는 중 · ${percent}% · 완료될 때까지 탭을 닫지 마세요.`);
+  }, { signal: controller.signal });
+  deckSaveTask = task;
+  task.then((meta) => {
+    if (deckSaveTask !== task) return;
+    deckSaveState = 'saved';
+    updateDeckSaveStatus(`${meta.name} · 이 기기에 저장됨 · 다음 탭부터 자동으로 열립니다.`);
+    toast('APKG를 기기에 저장했습니다. 다음부터 자동으로 열립니다.');
+  }).catch((error) => {
+    if (deckSaveTask !== task || error?.name === 'AbortError') return;
+    deckSaveState = 'failed';
+    updateDeckSaveStatus('APKG를 기기에 저장하지 못했습니다. 다음에 다시 선택해야 합니다.');
+    toast(error.message, 'error');
+  }).finally(() => {
+    if (deckSaveTask === task) {
+      deckSaveTask = null;
+      deckSaveController = null;
+    }
+  });
+}
+
+async function loadDeck(file, { shouldPersist = false } = {}) {
   if (!file.name.toLowerCase().endsWith('.apkg')) {
     throw new Error('.apkg 형식의 공식 덱 파일을 선택해 주세요.');
   }
@@ -337,6 +386,8 @@ async function loadDeck(file) {
       return readZipEntry(deckFile, entry);
     },
   });
+  if (shouldPersist) saveDeckOnDevice(file);
+  else deckSaveState = loadDeckMeta() ? 'saved' : 'idle';
   renderDashboard();
 }
 
@@ -489,15 +540,18 @@ app.addEventListener('click', async (event) => {
   else if (action === 'export-progress') {
     downloadText(`jlpt-max-progress-${dayKey()}.json`, exportProgress(state));
   } else if (action === 'remove-deck') {
-    if (window.confirm('현재 열어 둔 APKG를 닫을까요? 학습 기록은 남아 있습니다.')) {
-      await clearLegacyPersistedDeck();
+    if (window.confirm('이 기기에 저장한 APKG를 제거할까요? 학습 기록은 남아 있습니다.')) {
+      deckSaveController?.abort();
+      await deckSaveTask?.catch(() => {});
+      await removePersistedDeck();
       worker?.close();
       audioPlayer?.dispose();
       deckFile = null;
       cardIndex = [];
+      deckSaveState = 'idle';
       deckInput.value = '';
       renderWelcome();
-      toast('현재 덱을 닫았습니다. 다시 불러올 수 있습니다.');
+      toast('기기에 저장한 덱을 제거했습니다. 다시 불러올 수 있습니다.');
     }
   } else if (action === 'reset-progress') {
     if (window.confirm('모든 학습 진도와 복습 일정을 초기화할까요? 내보내지 않은 기록은 복구할 수 없습니다.')) {
@@ -514,7 +568,7 @@ document.addEventListener('change', async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
     try {
-      await loadDeck(file);
+      await loadDeck(file, { shouldPersist: true });
       if (file.name !== EXPECTED_FILENAME || file.size !== EXPECTED_SIZE) {
         toast('공식 v2.1.0과 파일 이름 또는 크기가 다릅니다. 카드 수를 확인해 주세요.');
       }
@@ -561,9 +615,22 @@ window.addEventListener('beforeinstallprompt', (event) => {
   installPrompt = event;
 });
 
+async function restoreSavedDeck() {
+  renderLoading('기기에 저장된 덱을 자동으로 여는 중입니다.', 5);
+  try {
+    const persisted = await readPersistedDeck();
+    if (!persisted) throw new Error('저장 완료된 APKG를 찾지 못했습니다.');
+    await loadDeck(persisted);
+  } catch (error) {
+    await removePersistedDeck();
+    deckSaveState = 'idle';
+    renderWelcome(`저장된 덱을 열지 못했습니다. APKG를 한 번 다시 선택해 주세요: ${error.message}`);
+  }
+}
+
 function boot() {
   renderWelcome();
-  void clearLegacyPersistedDeck();
+  if (loadDeckMeta()) window.setTimeout(() => void restoreSavedDeck(), 0);
 }
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {

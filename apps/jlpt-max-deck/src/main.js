@@ -12,6 +12,7 @@ import { LocalAudioPlayer, isMissingObjectError } from './audio-player.js';
 import { cardView } from './card-renderer.js';
 import {
   buildQueue,
+  dailyNewHistoryKey,
   dayKey,
   reviewLabel,
   scheduleReview,
@@ -373,7 +374,10 @@ function rateCard(rating) {
   state.progress[activeCard.id] = scheduleReview(state.progress[activeCard.id], rating);
   const today = dayKey();
   state.history[today] = (state.history[today] || 0) + 1;
-  if (wasNew) state.newHistory[today] = (state.newHistory[today] || 0) + 1;
+  if (wasNew) {
+    const courseToday = dailyNewHistoryKey(state);
+    state.newHistory[courseToday] = (state.newHistory[courseToday] || 0) + 1;
+  }
   try {
     saveState(state);
   } catch {

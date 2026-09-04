@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
   buildQueue,
   cardMatchesMode,
+  dailyNewHistoryKey,
   scheduleReview,
   shuffleCards,
   streakFromHistory,
@@ -16,6 +17,8 @@ const cards = [
   ['audio5', 'n1', 'm1', 2, 'JLPT MAX덱::음성::N5', 'する', ''],
   ['g5', 'n3', 'm2', 0, 'JLPT MAX덱::문법::N5', 'あの', ''],
   ['p3', 'n4', 'm3', 0, 'JLPT MAX덱::종합 실전::어휘::N3::한자 읽기', '済む', ''],
+  ['g4', 'n6', 'm4', 0, 'JLPT MAX덱::문법::N4', 'ようだ', ''],
+  ['p4', 'n7', 'm5', 0, 'JLPT MAX덱::종합 실전::문법::N4::문장 완성', '選ぶ', ''],
 ];
 
 test('학습 코스는 대상 덱과 카드 유형만 고른다', () => {
@@ -56,9 +59,27 @@ test('이미 공부한 새 카드를 하루 목표에서 차감한다', () => {
     dailyGoal: 1,
     mode: 'vocabulary',
     progress: {},
-    newHistory: { '2026-09-03': 1 },
+    newHistory: { '2026-09-03:N4:vocabulary': 1 },
   }, new Date(2026, 8, 3, 12).getTime());
   assert.equal(queue.fresh.length, 0);
+});
+
+test('어휘를 마쳐도 같은 날 문법과 실전의 새 카드는 따로 열린다', () => {
+  const now = new Date(2026, 8, 3, 12);
+  const baseState = {
+    target: 'N4',
+    dailyGoal: 1,
+    progress: {},
+    newHistory: { '2026-09-03:N4:vocabulary': 1 },
+  };
+  const vocabulary = buildQueue(cards, { ...baseState, mode: 'vocabulary' }, now.getTime());
+  const grammar = buildQueue(cards, { ...baseState, mode: 'grammar' }, now.getTime());
+  const practice = buildQueue(cards, { ...baseState, mode: 'practice' }, now.getTime());
+
+  assert.equal(dailyNewHistoryKey({ ...baseState, mode: 'grammar' }, now), '2026-09-03:N4:grammar');
+  assert.equal(vocabulary.fresh.length, 0);
+  assert.deepEqual(grammar.cards.map((card) => card[0]), ['g4']);
+  assert.deepEqual(practice.cards.map((card) => card[0]), ['p4']);
 });
 
 test('학습을 시작할 때마다 카드 순서를 새로 섞고 원본은 유지한다', () => {

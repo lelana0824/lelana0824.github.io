@@ -10,6 +10,10 @@ export function dayKey(date = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
+export function dailyNewHistoryKey(state, date = new Date()) {
+  return `${dayKey(date)}:${state.target}:${state.mode}`;
+}
+
 export function levelFromDeck(deck) {
   return deck.match(/::(N[1-5])(?:$|::)/)?.[1] || '';
 }
@@ -46,7 +50,9 @@ export function buildQueue(index, state, now = Date.now()) {
     .filter((card) => !state.progress[card[0]])
     .sort((left, right) => Number(left[7] || 0) - Number(right[7] || 0));
   const firstFreshLevel = levels.find((level) => fresh.some((card) => levelFromDeck(card[4]) === level));
-  const remainingNew = Math.max(0, state.dailyGoal - Number(state.newHistory?.[dayKey(new Date(now))] || 0));
+  const remainingNew = Math.max(0, state.dailyGoal - Number(
+    state.newHistory?.[dailyNewHistoryKey(state, new Date(now))] || 0,
+  ));
   const newCards = firstFreshLevel
     ? fresh.filter((card) => levelFromDeck(card[4]) === firstFreshLevel).slice(0, remainingNew)
     : [];

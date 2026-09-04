@@ -6,14 +6,26 @@ export function isMissingObjectError(error) {
   return /object.*not found|notfounderror/i.test(`${error?.name || ''} ${error?.message || ''}`);
 }
 
+export function configurePlaybackAudioSession(navigatorObject = globalThis.navigator) {
+  try {
+    const session = navigatorObject?.audioSession;
+    if (!session || !('type' in session)) return false;
+    session.type = 'playback';
+    return session.type === 'playback';
+  } catch {
+    return false;
+  }
+}
+
 export class LocalAudioPlayer {
-  constructor({ loadBytes, maxCached = 12, contextClass } = {}) {
+  constructor({ loadBytes, maxCached = 12, contextClass, navigatorObject } = {}) {
     if (typeof loadBytes !== 'function') throw new Error('음성 로더가 필요합니다.');
     this.loadBytes = loadBytes;
     this.maxCached = maxCached;
     this.ContextClass = contextClass === undefined
       ? globalThis.AudioContext || globalThis.webkitAudioContext
       : contextClass;
+    this.navigatorObject = navigatorObject === undefined ? globalThis.navigator : navigatorObject;
     this.context = null;
     this.buffers = new Map();
     this.currentSource = null;
@@ -45,6 +57,7 @@ export class LocalAudioPlayer {
   }
 
   async play(filename, mimeType = 'audio/mpeg') {
+    configurePlaybackAudioSession(this.navigatorObject);
     const context = this.ensureContext();
     if (!context) return this.playFallback(filename, mimeType);
 

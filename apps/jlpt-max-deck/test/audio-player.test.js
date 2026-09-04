@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { LocalAudioPlayer, isMissingObjectError } from '../src/audio-player.js';
+import {
+  LocalAudioPlayer,
+  configurePlaybackAudioSession,
+  isMissingObjectError,
+} from '../src/audio-player.js';
 
 test('iOS의 객체 누락 오류를 재시도 대상으로 판별한다', () => {
   assert.equal(isMissingObjectError(new Error('This object is not found')), true);
@@ -53,6 +57,7 @@ test('사용자 탭에서 오디오 컨텍스트를 먼저 활성화하고 MP3�
   const backing = new Uint8Array([0, 0xff, 0xfb, 0x10, 0]);
   const player = new LocalAudioPlayer({
     contextClass: FakeAudioContext,
+    navigatorObject: {},
     loadBytes: async () => {
       events.push('load');
       loads += 1;
@@ -67,4 +72,28 @@ test('사용자 탭에서 오디오 컨텍스트를 먼저 활성화하고 MP3�
   assert.equal(loads, 1);
   assert.equal(decodes, 1);
   assert.equal(starts, 2);
+});
+
+test('iOS 음성 재생 전에 오디오 세션을 playback으로 지정한다', async () => {
+  const assigned = [];
+  const session = {
+    current: 'ambient',
+    get type() { return this.current; },
+    set type(value) {
+      assigned.push(value);
+      this.current = value;
+    },
+  };
+  const player = new LocalAudioPlayer({
+    contextClass: null,
+    navigatorObject: { audioSession: session },
+    loadBytes: async () => new Uint8Array(),
+  });
+  player.playFallback = async () => {};
+
+  await player.play('sample.mp3');
+
+  assert.deepEqual(assigned, ['playback']);
+  assert.equal(session.type, 'playback');
+  assert.equal(configurePlaybackAudioSession({}), false);
 });
